@@ -48,3 +48,5 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Неверный пароль!')
         attrs['user'] = user    
         return attrs
+
+        
