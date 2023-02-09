@@ -9,7 +9,7 @@ class UserManager(BaseUserManager):
     def _create_user(self, email, password, **extra_fields):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        user.password = make_password(password)
+        user.password = make_password(password) # хеширование пароля
         user.create_activation_code()
         user.save(using=self._db)
         return user
