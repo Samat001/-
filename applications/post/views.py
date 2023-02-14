@@ -1,6 +1,7 @@
 from rest_framework import generics
 from applications.post.models import *
 from applications.post.serializers import *
+from applications.feedback.models import Like
 from rest_framework.permissions import IsAuthenticated , IsAuthenticatedOrReadOnly
 from applications.post.permissions import IsOwner
 from django_filters.rest_framework import DjangoFilterBackend
@@ -8,7 +9,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import ViewSet, ModelViewSet
 from rest_framework.response import Response
-
+from rest_framework.decorators import action
 
 
 # class PostListAPIView(generics.ListAPIView):
@@ -37,18 +38,18 @@ class CustomPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 10000
 
-class PostListCreateAPIView(generics.ListCreateAPIView):
-    permission_classes = [IsOwner]
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    pagination_class = CustomPagination
+# class PostListCreateAPIView(generics.ListCreateAPIView):
+#     permission_classes = [IsOwner]
+#     queryset = Post.objects.all()
+#     serializer_class = PostSerializer
+#     pagination_class = CustomPagination
 
-    filter_backends = [DjangoFilterBackend,SearchFilter,OrderingFilter]
-    filterset_fields = ['owner', 'title']
-    search_fields = ['title']
-    ordering_feilds = ['id']
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    # filter_backends = [DjangoFilterBackend,SearchFilter,OrderingFilter]
+    # filterset_fields = ['owner', 'title']
+    # search_fields = ['title']
+    # ordering_feilds = ['id']
+    # def perform_create(self, serializer):
+    #     serializer.save(owner=self.request.user)
 
 
     # def get_queryset(self):
@@ -59,10 +60,10 @@ class PostListCreateAPIView(generics.ListCreateAPIView):
     #     # queryset = queryset.filter(owner=5)
     #     return queryset
 
-class PostDetailDeleteUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsOwner]
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+# class PostDetailDeleteUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
+#     permission_classes = [IsOwner]
+#     queryset = Post.objects.all()
+#     serializer_class = PostSerializer
 
 
 class CreateImageAPIView(generics.CreateAPIView):
@@ -71,6 +72,37 @@ class CreateImageAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     # stackowerflow
+class PostModelViewSet(ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsOwner]
+
+    pagination_class = CustomPagination
+
+    filter_backends = [DjangoFilterBackend,SearchFilter,OrderingFilter]
+    filterset_fields = ['owner', 'title']
+    search_fields = ['title']
+    ordering_feilds = ['id', 'owner']
+    
+    @action(methods=['POST'], detail=True)# localhost:800/api/v1/post/1/like
+    def like(self, request , pk , *args , **kwargs):
+        user = request.user
+        print(user)
+        print(pk)
+
+        like_obj, _ = Like.objects.get_or_create(owner=user,post_id=pk)
+        like_obj.is_like = not like_obj.is_like
+        like_obj.save()
+        status = 'liked'
+        if not like_obj.is_like:
+            status = 'unliked'
+
+        return Response({'status': status})
+
+
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 class CommentViewSet(ViewSet):
     def list(self, request):
@@ -81,3 +113,9 @@ class CommentViewSet(ViewSet):
 class CommentModelViewset(ModelViewSet):
     queryset= Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+        

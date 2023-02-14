@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from applications.post.models import *
-
+from applications.feedback.serializers import *
 
 class PostImageSerializer(serializers.ModelSerializer):
     
@@ -16,6 +16,7 @@ class PostImageSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     # owner = serializers.EmailField(required=False)
+    likes = LikeSerializer(many=True, read_only=True)
     images = PostImageSerializer(many=True, read_only=True)
     owner = serializers.ReadOnlyField(source='owner.email')
 
@@ -50,7 +51,8 @@ class PostSerializer(serializers.ModelSerializer):
         return post
 
 class CommentSerializer(serializers.ModelSerializer):
-
+    owner = serializers.ReadOnlyField(source='owner.email')
     class Meta:
         model = Comment
         fields = '__all__'
+
