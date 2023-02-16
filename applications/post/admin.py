@@ -9,9 +9,15 @@ class ImageAdmin(admin.TabularInline):
 class PostAdmin(admin.ModelAdmin):
     inlines = (ImageAdmin,)
     
-    list_display = ('title', 'owner')
+    list_display = ('title', 'owner', 'post_count','post_rating')
+    
+    def post_count(self,obj):
+        return obj.likes.filter(is_like=True).count()
+
+
+    def post_rating(self,obj):
+        return obj.ratings.count()
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(PostImage)
-
 admin.site.register(Comment)
