@@ -9,8 +9,11 @@ class ImageAdmin(admin.TabularInline):
 class PostAdmin(admin.ModelAdmin):
     inlines = (ImageAdmin,)
     
-    list_display = ('title', 'owner', 'post_count','post_rating')
-    
+    list_display = ('title', 'owner', 'post_count','post_rating', 'created_at', 'john',)
+    list_filter = ('owner','id',)
+    search_fields = ('title',)
+    # exclude = ('title',)
+
     def post_count(self,obj):
         return obj.likes.filter(is_like=True).count()
 
